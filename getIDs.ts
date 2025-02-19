@@ -4,11 +4,11 @@ const map = {}
 
 const browser = await chromium.launch()
 const ctx = await browser.newContext()
-const page = await ctx.newPage()
 
 async function find(url: string) {
 
 	console.log(`searching under ${url}`)
+	const page = await ctx.newPage()
 	await page.goto(url)
 	await Bun.sleep(2000)
 
@@ -20,20 +20,27 @@ async function find(url: string) {
 		const { id, name }: { id: number, name: string } = JSON.parse(issue)
 		if (path.endsWith("spread/1")) {
 			const num = name
-				.match(/\(Issue\s(?<num>.+)\)/)
+				.match(/\(issues?\s(?<num>.+)\)/i)
 				?.groups["num"]
 				.split(" ")
 				.join("")
+				.replaceAll("/", "+")
+				.split("+")
+				.map((n) => n.padStart(3, "0"))
+				.join("+")
 			map[num] = id
 			console.log(`${num}: ${id}`)
-		} else {
-			await find(`https://reader.exacteditions.com${path}`)
 		}
 	}
 
 }
 
-await find("https://reader.exacteditions.com/magazines/493/issues")
+const d = new Date()
+
+for (let i = 1982; i <= d.getFullYear(); i++) {
+	await find(`https://reader.exacteditions.com/magazines/493/issues/${i}`)
+}
+
 await browser.close()
 
-Bun.write("id.json", JSON.stringify(map))
+Bun.write("id.json", JSON.stringify(map, null, 4))

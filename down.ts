@@ -1,19 +1,26 @@
 import * as fs from "fs/promises"
+import { promisify } from "util"
 import * as path from "path"
-import { $ } from "bun"
+import { exec } from "child_process"
+import data from "./id.json"
+
+const execPromise = promisify(exec)
 
 function fail(msg) {
 	console.error(msg)
 	process.exit(1)
 }
 
-const ids = process.argv.slice(2)
+const bookdir = `${Bun.env["HOME"]}/files/books/wire`
+const issues = process.argv.slice(2)
 const downloadsPath = path.resolve("./downloads")
 const EE_SESSION = Bun.env["EE_SESSION"]
 const READER_SESSION = Bun.env["READER_SESSION"]
+const map = new Map(Object.entries(data).sort())
 
 if (!EE_SESSION) fail("requires env var EE_SESSION")
 if (!READER_SESSION) fail("requires env var READER_SESSION")
+if (!Bun.which("qpdf")) fail("requires qpdf")
 
 const headers = {
 	"Cookie": `enableKeystrokes=true; ee_session=${EE_SESSION}; _reader_session=${READER_SESSION}`,
@@ -29,17 +36,24 @@ function compareArrayBuffers(buf1, buf2) {
 	return true
 }
 
-async function downloadBook(id: string) {
+export async function downloadBook(issue: string) {
+
+	const id = map.get(issue)
+
+	if (!id) {
+		console.error(`issue not found: ${issue}`)
+		return
+	}
 
 	let lastBuf = null
 	const files = []
-	const pagesPath = path.join(downloadsPath, id)
+	const pagesPath = path.join(downloadsPath, issue)
 
 	async function downloadPage(page: number) {
 		const url = `https://reader.exacteditions.com/issues/${id}/spread/${page * 2 - 1}.pdf`
 		const fname = `${String(page).padStart(3, "0")}.pdf`
 		const dest = path.join(pagesPath, fname)
-		process.stdout.write(`fetching ${id}/${fname}... `)
+		process.stdout.write(`fetching ${issue}/${fname}... `)
 		const res = await fetch(url, {
 			headers: headers,
 		})
@@ -70,11 +84,19 @@ async function downloadBook(id: string) {
 
 	await fs.mkdir(pagesPath, { recursive: true })
 	await downloadPage(1)
-	// await $`qpdf --empty --pages ${files.join(" ")} -- ${downloadsPath}/${id}.pdf`
-	// await fs.rm(pagesPath, { recursive: true, force: true })
+	await execPromise(`qpdf --empty --pages ${pagesPath}/*.pdf -- ${bookdir}/${issue}.pdf`)
+	await fs.rm(pagesPath, { recursive: true, force: true })
 
 }
 
-for (const id of ids) {
-	await downloadBook(id)
+if (issues.length === 0) {
+	for (var [issue, id] of map) {
+		const f = Bun.file(`${bookdir}/${issue}.pdf`)
+		if (await f.exists()) continue
+		await downloadBook(issue)
+	}
+} else {
+	for (const issue of issues) {
+		await downloadBook(issue)
+	}
 }
