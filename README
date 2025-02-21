@@ -1,12 +1,12 @@
 scrape wire magazine to nice pdf
 
-prerequisites
+PREREQUISITES
 
   - bun
   - pdfimage (from poppler)
   - img2pdf (from imagemagick)
 
-usage
+USAGE
 
   1. login to exacteditions.com
 

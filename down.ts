@@ -13,8 +13,8 @@ function fail(msg) {
 
 const issues = process.argv.slice(2)
 const downloadsPath = path.resolve("./downloads")
-const bookdir = Bun.env["BOOK_DIR"]
-	? Bun.env["BOOK_DIR"].replaceAll("~", Bun.env["HOME"])
+const bookdir = Bun.env["DEST"]
+	? Bun.env["DEST"].replaceAll("~", Bun.env["HOME"])
 	: downloadsPath
 const EE_SESSION = Bun.env["EE_SESSION"]
 const READER_SESSION = Bun.env["READER_SESSION"]
