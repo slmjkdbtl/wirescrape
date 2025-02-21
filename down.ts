@@ -22,7 +22,8 @@ const map = new Map(Object.entries(data).sort())
 
 if (!EE_SESSION) fail("requires env var EE_SESSION")
 if (!READER_SESSION) fail("requires env var READER_SESSION")
-if (!Bun.which("qpdf")) fail("requires qpdf")
+if (!Bun.which("pdfimage")) fail("requires pdfimage from poppler")
+if (!Bun.which("img2pdf")) fail("requires img2pdf from imagemagick")
 
 const headers = {
 	"Cookie": `enableKeystrokes=true; ee_session=${EE_SESSION}; _reader_session=${READER_SESSION}`,
