@@ -11,9 +11,11 @@ function fail(msg) {
 	process.exit(1)
 }
 
-const bookdir = `${Bun.env["HOME"]}/files/books/wire`
 const issues = process.argv.slice(2)
 const downloadsPath = path.resolve("./downloads")
+const bookdir = Bun.env["BOOK_DIR"]
+	? Bun.env["BOOK_DIR"].replaceAll("~", Bun.env["HOME"])
+	: downloadsPath
 const EE_SESSION = Bun.env["EE_SESSION"]
 const READER_SESSION = Bun.env["READER_SESSION"]
 const map = new Map(Object.entries(data).sort())
@@ -46,14 +48,14 @@ export async function downloadBook(issue: string) {
 	}
 
 	let lastBuf = null
-	const files = []
 	const pagesPath = path.join(downloadsPath, issue)
 
 	async function downloadPage(page: number) {
 		const url = `https://reader.exacteditions.com/issues/${id}/spread/${page * 2 - 1}.pdf`
-		const fname = `${String(page).padStart(3, "0")}.pdf`
-		const dest = path.join(pagesPath, fname)
-		process.stdout.write(`fetching ${issue}/${fname}... `)
+		const pageName = String(page).padStart(3, "0")
+		const fileName = `${pageName}.pdf`
+		const dest = path.join(pagesPath, fileName)
+		process.stdout.write(`fetching ${issue}/${fileName}... `)
 		const res = await fetch(url, {
 			headers: headers,
 		})
@@ -77,20 +79,24 @@ export async function downloadBook(issue: string) {
 		}
 		lastBuf = buf
 		await Bun.write(dest, buf)
-		files.push(dest)
+		await execPromise(`pdfimages -all ${dest} ${pagesPath}/${pageName}`)
+		await fs.rm(dest)
 		process.stdout.write(`done\n`)
 		await downloadPage(page + 1)
 	}
 
+	const dest = path.join(bookdir, `${issue}.pdf`)
+
 	await fs.mkdir(pagesPath, { recursive: true })
 	await downloadPage(1)
-	await execPromise(`qpdf --empty --pages ${pagesPath}/*.pdf -- ${bookdir}/${issue}.pdf`)
+	await execPromise(`img2pdf ${pagesPath}/*.jpg -o ${dest}`)
+	console.log(`saved to ${dest}`)
 	await fs.rm(pagesPath, { recursive: true, force: true })
 
 }
 
 if (issues.length === 0) {
-	for (var [issue, id] of map) {
+	for (let [issue, id] of map) {
 		const f = Bun.file(`${bookdir}/${issue}.pdf`)
 		if (await f.exists()) continue
 		await downloadBook(issue)
