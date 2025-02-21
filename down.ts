@@ -62,7 +62,7 @@ export async function downloadBook(issue: string) {
 		})
 		if (!res.ok) {
 			if (res.status === 429) {
-				console.log("\nhit load control, retry in 90 sec...")
+				console.log("\nhit rate limit, retry in 90 sec...")
 				await Bun.sleep(90000)
 				await downloadPage(page)
 				return
@@ -91,7 +91,7 @@ export async function downloadBook(issue: string) {
 	await fs.mkdir(pagesPath, { recursive: true })
 	await downloadPage(1)
 	await execPromise(`img2pdf ${pagesPath}/*.jpg -o ${dest}`)
-	console.log(`saved to ${dest}`)
+	console.log(`issue ${issue} saved to ${dest}`)
 	await fs.rm(pagesPath, { recursive: true, force: true })
 
 }

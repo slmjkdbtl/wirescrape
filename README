@@ -1,0 +1,24 @@
+scrape wire magazine to nice pdf
+
+prerequisites
+
+  - bun
+  - pdfimage (from poppler)
+  - img2pdf (from imagemagick)
+
+usage
+
+  1. login to exacteditions.com
+
+  2. get cookies for "ee_session" and "_reader_session" and set them as
+     EE_SESSION and READER_SESSION env var
+
+  3. optionally set DEST env var to save destination
+
+  4. get issues and id data
+
+       $ bun run getIDs.ts
+
+  3. start scraping
+
+       $ bun run main.ts
