@@ -13,12 +13,13 @@ USAGE
   2. get cookies for "ee_session" and "_reader_session" and set them as
      EE_SESSION and READER_SESSION env var
 
-  3. optionally set DEST env var to save destination
+  3. by default will save to a "downloads" folder under this project, set DEST
+     env var for custom location
 
   4. get issues and id data
 
        $ bun run getIDs.ts
 
-  3. start scraping
+  5. start scraping
 
-       $ bun run main.ts
+       $ bun run down.ts
