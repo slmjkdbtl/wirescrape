@@ -9,8 +9,7 @@ async function find(url: string) {
 
 	console.log(`searching under ${url}`)
 	const page = await ctx.newPage()
-	await page.goto(url)
-	await Bun.sleep(2000)
+	await page.goto(url, { waitUntil: "load" })
 
 	const covers = await page.locator("magazine-cover").all()
 
@@ -32,6 +31,8 @@ async function find(url: string) {
 			console.log(`${num}: ${id}`)
 		}
 	}
+
+	await page.close()
 
 }
 

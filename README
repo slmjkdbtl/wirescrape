@@ -3,8 +3,8 @@ scrape wire magazine to nice pdf
 PREREQUISITES
 
   - bun
-  - pdfimage (from poppler)
-  - img2pdf (from imagemagick)
+  - pdfimages (from poppler)
+  - img2pdf
 
 USAGE
 
@@ -16,10 +16,14 @@ USAGE
   3. by default will save to a "downloads" folder under this project, set DEST
      env var for custom location
 
-  4. get issues and id data
+  4. install deps
+
+       $ bun install
+
+  5. get issues and id data
 
        $ bun run getIDs.ts
 
-  5. start scraping
+  6. start scraping
 
        $ bun run down.ts
